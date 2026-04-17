@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Simple "A" letter placeholder for Avocor -->
+    <path
+        android:fillColor="#FF00A3E0"
+        android:pathData="M54,24L30,84h12l4,-12h16l4,12h12L54,24zM49,64l5,-16l5,16H49z" />
+</vector>

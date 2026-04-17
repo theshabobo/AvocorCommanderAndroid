@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="avocor_primary">#FF00A3E0</color>
+    <color name="avocor_surface">#FF1A1A2E</color>
+    <color name="avocor_background">#FF0F0F1A</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+</resources>
