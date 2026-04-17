@@ -88,15 +88,15 @@ fun QuickControlPanel(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                SourceButton("HDMI 1", Modifier.weight(1f)) { onSource("HDMI1") }
-                SourceButton("HDMI 2", Modifier.weight(1f)) { onSource("HDMI2") }
+                SourceButton("HDMI 1", Modifier.weight(1f)) { onSource("HDMI 1") }
+                SourceButton("HDMI 2", Modifier.weight(1f)) { onSource("HDMI 2") }
             }
             // Row 2: Other sources
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                SourceButton("DP", Modifier.weight(1f)) { onSource("DP") }
+                SourceButton("DP", Modifier.weight(1f)) { onSource("DisplayPort 1") }
                 SourceButton("USB-C", Modifier.weight(1f)) { onSource("USB-C") }
                 SourceButton("Home", Modifier.weight(1f)) { onSource("HOME") }
             }

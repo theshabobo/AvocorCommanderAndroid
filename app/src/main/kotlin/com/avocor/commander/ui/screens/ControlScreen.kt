@@ -90,7 +90,7 @@ fun ControlScreen(
                             value = selectedDevice?.deviceName ?: "Select a device",
                             onValueChange = {},
                             readOnly = true,
-                            modifier = Modifier
+                            modifier = @Suppress("DEPRECATION") Modifier
                                 .fillMaxWidth()
                                 .menuAnchor(),
                             trailingIcon = {
@@ -192,31 +192,26 @@ fun ControlScreen(
             if (selectedDevice != null) {
                 QuickControlPanel(
                     onPowerOn = {
-                        deviceViewModel.sendCommand(
-                            selectedDeviceId, "power on", "power"
+                        deviceViewModel.powerOnWithWakeFallback(
+                            com.avocor.commander.model.CommandTarget.SingleDevice(selectedDeviceId)
                         )
                     },
                     onPowerOff = {
-                        deviceViewModel.sendCommand(
-                            selectedDeviceId, "power off", "power"
-                        )
+                        deviceViewModel.sendCommand(selectedDeviceId, "Power Off")
                     },
                     onSource = { source ->
-                        deviceViewModel.sendCommand(
-                            selectedDeviceId, "input $source", "input"
-                        )
+                        deviceViewModel.sendCommand(selectedDeviceId, source)
                     },
                     onVolume = { level ->
                         deviceViewModel.sendCommand(
-                            selectedDeviceId, "volume $level", "audio"
+                            selectedDeviceId, "Set Volume $level"
                         )
                     },
                     onMuteToggle = {
                         val muted = selectedStatus?.isMuted ?: false
                         deviceViewModel.sendCommand(
                             selectedDeviceId,
-                            if (muted) "mute off" else "mute on",
-                            "audio"
+                            if (muted) "Mute Off" else "Mute On"
                         )
                     },
                     currentVolume = selectedStatus?.volume,

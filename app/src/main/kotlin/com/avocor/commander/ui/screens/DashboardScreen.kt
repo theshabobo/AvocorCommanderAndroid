@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
@@ -28,9 +29,12 @@ fun DashboardScreen(
     deviceViewModel: DeviceViewModel,
     username: String,
     onDeviceSelected: (DeviceDto) -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onRoomSelected: ((Int) -> Unit)? = null,
+    onSettingsClick: (() -> Unit)? = null
 ) {
     val groups by deviceViewModel.groups.collectAsState()
+    val allDevices by deviceViewModel.devices.collectAsState()
     val statuses by deviceViewModel.statuses.collectAsState()
     val isRefreshing by deviceViewModel.isRefreshing.collectAsState()
     val wsState by deviceViewModel.wsConnectionState.collectAsState()
@@ -76,6 +80,11 @@ fun DashboardScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(end = 8.dp)
                     )
+                    if (onSettingsClick != null) {
+                        IconButton(onClick = onSettingsClick) {
+                            Icon(Icons.Filled.Settings, contentDescription = "Settings")
+                        }
+                    }
                     IconButton(onClick = { deviceViewModel.refresh() }) {
                         Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
                     }
@@ -124,6 +133,7 @@ fun DashboardScreen(
                 ) {
                     items(groups, key = { it.id }) { group ->
                         val isExpanded = group.id in expandedGroups
+                        val groupDevices = allDevices.filter { it.id in group.memberDeviceIds }
 
                         // Group card
                         Card(
@@ -136,10 +146,14 @@ fun DashboardScreen(
                                 // Group header
                                 Surface(
                                     onClick = {
-                                        expandedGroups = if (isExpanded) {
-                                            expandedGroups - group.id
+                                        if (onRoomSelected != null) {
+                                            onRoomSelected(group.id)
                                         } else {
-                                            expandedGroups + group.id
+                                            expandedGroups = if (isExpanded) {
+                                                expandedGroups - group.id
+                                            } else {
+                                                expandedGroups + group.id
+                                            }
                                         }
                                     },
                                     color = MaterialTheme.colorScheme.surface
@@ -152,13 +166,13 @@ fun DashboardScreen(
                                     ) {
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(
-                                                text = group.name,
+                                                text = group.groupName,
                                                 style = MaterialTheme.typography.titleLarge,
                                                 color = MaterialTheme.colorScheme.onSurface
                                             )
-                                            if (group.description != null) {
+                                            if (!group.notes.isNullOrBlank()) {
                                                 Text(
-                                                    text = group.description,
+                                                    text = group.notes,
                                                     style = MaterialTheme.typography.bodySmall,
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                                 )
@@ -166,12 +180,12 @@ fun DashboardScreen(
                                         }
 
                                         // Device count badge
-                                        val onlineCount = group.devices.count { device ->
+                                        val onlineCount = groupDevices.count { device ->
                                             statuses.any { it.deviceId == device.id && it.isConnected }
                                                     || device.isConnected
                                         }
                                         Text(
-                                            text = "$onlineCount/${group.devices.size}",
+                                            text = "$onlineCount/${groupDevices.size}",
                                             style = MaterialTheme.typography.labelMedium,
                                             color = if (onlineCount > 0) StatusOnline else StatusOffline
                                         )
@@ -188,7 +202,7 @@ fun DashboardScreen(
                                         ),
                                         verticalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        group.devices.forEach { device ->
+                                        groupDevices.forEach { device ->
                                             val deviceStatus = statuses.find {
                                                 it.deviceId == device.id
                                             }

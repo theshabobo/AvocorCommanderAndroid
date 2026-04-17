@@ -82,9 +82,9 @@ data class CommandParameterDto(
 
 data class GroupDto(
     val id: Int,
-    val name: String,
-    val description: String? = null,
-    val devices: List<DeviceDto> = emptyList()
+    val groupName: String,
+    val notes: String? = null,
+    val memberDeviceIds: List<Int> = emptyList()
 )
 
 data class GroupCommandRequest(

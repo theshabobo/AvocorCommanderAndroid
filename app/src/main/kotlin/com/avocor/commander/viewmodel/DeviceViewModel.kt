@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.avocor.commander.api.*
+import com.avocor.commander.model.CommandTarget
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -134,6 +135,70 @@ class DeviceViewModel(application: Application) : AndroidViewModel(application) 
                 )
             } catch (e: Exception) {
                 _commandResult.emit("Macro error: ${e.message}")
+            }
+        }
+    }
+
+    fun sendTargetedCommand(target: CommandTarget, command: String) {
+        when (target) {
+            is CommandTarget.SingleDevice -> sendCommand(target.deviceId, command)
+            is CommandTarget.AllInRoom -> sendGroupCommand(target.groupId, command)
+        }
+    }
+
+    /**
+     * Send Power On, and if it fails (timeout/no response), automatically send WoL as fallback.
+     */
+    fun powerOnWithWakeFallback(target: CommandTarget) {
+        viewModelScope.launch {
+            val currentApi = api ?: return@launch
+            try {
+                when (target) {
+                    is CommandTarget.SingleDevice -> {
+                        val response = currentApi.sendCommand(
+                            target.deviceId,
+                            CommandRequest(command = "Power On")
+                        )
+                        if (response.success) {
+                            _commandResult.emit("OK: ${response.response ?: "Power On sent"}")
+                        } else {
+                            // Power On failed — try WoL
+                            _commandResult.emit("Power On failed, sending Wake...")
+                            val wake = currentApi.wakeDevice(target.deviceId)
+                            _commandResult.emit(
+                                if (wake.success) "Wake sent: ${wake.message ?: "OK"}"
+                                else "Wake failed: ${wake.message}"
+                            )
+                        }
+                    }
+
+                    is CommandTarget.AllInRoom -> {
+                        val responses = currentApi.sendGroupCommand(
+                            target.groupId,
+                            GroupCommandRequest(command = "Power On")
+                        )
+                        val failed = responses.filter { !it.success }
+                        val successCount = responses.size - failed.size
+
+                        if (failed.isEmpty()) {
+                            _commandResult.emit("Power On: ${responses.size}/${responses.size} succeeded")
+                        } else {
+                            // Wake devices that failed Power On
+                            var wakeCount = 0
+                            for (fail in failed) {
+                                try {
+                                    val wake = currentApi.wakeDevice(fail.deviceId)
+                                    if (wake.success) wakeCount++
+                                } catch (_: Exception) { }
+                            }
+                            _commandResult.emit(
+                                "Power On: $successCount OK, ${failed.size} failed → Wake sent to $wakeCount"
+                            )
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                _commandResult.emit("Power On error: ${e.message}")
             }
         }
     }
